@@ -1,0 +1,139 @@
+(add-to-list 'load-path "~/.emacs.d/")
+
+;; ================= php modes =====================
+;; (require 'php-mode);;
+
+;; ============== highlight parenthesis mode ===============
+;; (require 'highlight-parentheses)
+;; (require 'highlight-sexps)
+
+;; ============== cursor change color when on top of color text ===========
+(setq hcz-set-cursor-color-color "")
+        (setq hcz-set-cursor-color-buffer "")
+        (defun hcz-set-cursor-color-according-to-mode ()
+          "change cursor color according to some minor modes."
+          ;; set-cursor-color is somewhat costly, so we only call it when needed:
+          (let ((color
+                 (if buffer-read-only "black"
+                   (if overwrite-mode "red"
+                     "blue"))))
+            (unless (and
+                     (string= color hcz-set-cursor-color-color)
+                     (string= (buffer-name) hcz-set-cursor-color-buffer))
+              (set-cursor-color (setq hcz-set-cursor-color-color color))
+              (setq hcz-set-cursor-color-buffer (buffer-name)))))
+        (add-hook 'post-command-hook 'hcz-set-cursor-color-according-to-mode)
+
+;; ============ highlight parentheses ==============
+(show-paren-mode t)
+(setq show-paren-delay 0)
+(setq show-paren-style 'mixed)
+(require 'paren)
+(set-face-background 'show-paren-match-face "#A31C1C")
+(set-face-foreground 'show-paren-match-face "#def")
+(set-face-attribute 'show-paren-match-face nil :weight 'extra-bold)
+(set-face-foreground 'show-paren-mismatch-face "red") 
+(set-face-attribute 'show-paren-mismatch-face nil 
+                    :weight 'bold :underline t :overline nil :slant 'normal)
+
+;; ================ android-mode ===========================
+(require 'android-mode)
+(setq android-mode-sdk-dir "~/Applications/Android-sdk")
+(add-hook 'gud-mode-hook
+          (lambda ()
+            (add-to-list 'gud-jdb-classpath "~/Applications/Android-sdk/platforms/android-15/android.jar")
+            ))
+
+;; ================= indentations =====================
+(setq c-offsets-alist '((arglist-cont-nonempty . +)));; java indentation
+(setq c-basic-offset 2);; c mode indentation
+(setq js-indent-level 2);; javascript indentation
+(setq css-indent-offset 2);; set css indent
+
+;; ============== set emacs indentation for java andriod @Override ===================
+(add-hook 'java-mode-hook '(lambda () "Treat Java 1.5 @-style annotations as comments."
+                             (setq c-comment-start-regexp "\\(@\\|/\\(/\\|[*][*]?\\)\\)")
+                             (modify-syntax-entry ?@ "< b" java-mode-syntax-table)))
+
+
+;; ======= set indent size ===========
+(setq-default indent-tabs-mode nil)
+(setq-default tab-width 2)
+(setq indent-line-function 'insert-tab)
+
+;; ========= keyboard scroll one line at a time ===========
+(setq scroll-step 1)
+
+;; ========= Changes all yes/no questions to y/n type ==========
+(fset 'yes-or-no-p 'y-or-n-p)
+
+;; ========= syntax highlighting by default ===========
+(global-font-lock-mode 1)
+
+;; ====== displays the time in the status bar ==========
+(display-time)
+
+;; ======= disable backups ==========
+(setq backup-inhibited t)
+(setq auto-save-default nil)
+
+;; ======== Show line-number on left ============
+(global-linum-mode 1)
+(setq linum-format "%d ")
+;; Show column-number in the mode line
+(column-number-mode 1)
+
+;; ===== Turn on Auto Fill mode automatically in all modes =====
+(setq auto-fill-mode 1)
+
+;; ======== auto re-load all buffers ==============
+(global-auto-revert-mode)
+
+
+;; =================== color themes ========================
+(require 'color-theme)
+
+;; (add-to-list 'load-path "~/.emacs.d/color-theme-solarized")
+;;(require 'color-theme-solarized)
+
+;; (load "~/.emacs.d/color-theme-tango.el")
+;; (require 'tango-theme)
+
+;; ======== set up tangotango theme ================XS
+(setq color-theme-load-all-themes nil)
+(require 'color-theme-tangotango)
+
+;; select theme - first list element is for windowing system, second is for console/terminal
+;; Source : http://www.emacswiki.org/emacs/ColorTheme#toc9
+(setq color-theme-choices 
+      '(color-theme-tangotango color-theme-tangotango))
+
+;; default-start
+(funcall (lambda (cols)
+           (let ((color-theme-is-global nil))
+             (eval 
+              (append '(if (window-system))
+                      (mapcar (lambda (x) (cons x nil)) 
+                              cols)))))
+         color-theme-choices)
+
+;; test for each additional frame or console
+(require 'cl)
+(fset 'test-win-sys 
+      (funcall (lambda (cols)
+                 (lexical-let ((cols cols))
+                   (lambda (frame)
+                     (let ((color-theme-is-global nil))
+                       ;; must be current for local ctheme
+                       (select-frame frame)
+                       ;; test winsystem
+                       (eval 
+                        (append '(if (window-system frame)) 
+                                (mapcar (lambda (x) (cons x nil)) 
+                                        cols)))))))
+               color-theme-choices ))
+;; hook on after-make-frame-functions
+(add-hook 'after-make-frame-functions 'test-win-sys)
+
+(color-theme-tangotango)
+
